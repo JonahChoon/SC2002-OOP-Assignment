@@ -1,0 +1,12 @@
+Timestamp,User ID,Role,Activity,Status
+1/11/24 9:11,A001,Administrator,LOGIN,Success
+1/11/24 9:11,A001,Administrator,LOGIN,Success
+1/11/24 9:11,P1001,Patient,LOGIN,Success
+1/11/24 9:11,P1001,Patient,LOGOUT,Success
+1/11/24 9:11,asd,Unknown,LOGIN,Failure (User Not Found)
+1/11/24 16:45,P1001,Patient,LOGIN,Success
+1/11/24 16:45,P1001,Patient,LOGOUT,Success
+2024-11-04 13:27:34,P1001,Patient,LOGIN,Success
+2024-11-04 14:15:56,P1001,Patient,LOGIN,Failure (Incorrect Password)
+2024-11-04 14:16:00,P1001,Patient,LOGIN,Success
+2024-11-05 11:04:51,P1001,Patient,LOGIN,Success

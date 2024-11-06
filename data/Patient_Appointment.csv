@@ -1,0 +1,11 @@
+﻿Appointment ID,Patient ID,Doctor ID,Appointment Date,Appointment Time Slot,Status,Outcome
+AP001,P1001,D001,15/10/24,1000 - 1100,Confirmed,Completed
+AP002,P1002,D002,15/10/24,1100 - 1200,Confirmed,Completed
+AP003,P1003,D001,15/10/24,1100 - 1200,Confirmed,Completed
+AP004,P1004,D002,16/10/24,1000 - 1100,Confirmed,Completed
+AP005,P1005,D001,16/10/24,0900 - 1000,Confirmed,Completed
+AP006,P1001,D001,17/10/24,1000 - 1100,Cancelled by Doctor,-
+AP007,P1003,D002,17/10/24,0900 - 1000,Cancelled by Patient,-
+AP008,P1002,D001,18/10/24,1400 - 1500,Confirmed,Completed
+AP009,P1002,D002,19/10/24,0900 - 1000,Pending,-
+AP010,P1001,D001,16/10/24,1400 - 1500,Confirmed,-

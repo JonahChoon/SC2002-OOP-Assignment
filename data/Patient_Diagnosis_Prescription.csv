@@ -1,0 +1,6 @@
+﻿Patient ID,Date,Diagnosis,Treatments,Prescription,Quantity,Case Notes,Status,Staff ID,Appointment ID,Type of Service
+P1001,15/10/24,Headache,Painkiller,Ibuprofen,10,No fever,Dispensed,D001,AP001,Consultation
+P1002,15/10/24,Lung Infection,Antibiotics,Amoxicillin,10,To monitor,Dispensed,D002,AP002,X-ray
+P1003,15/10/24,Lung Infection,Antibiotics,Amoxicillin,10,To monitor,Dispensed,D001,AP003,X-ray
+P1004,16/10/24,Fever,Painkiller,Paracetamol,10,39 degrees,Dispensed,D002,AP004,Consultation
+P1005,16/10/24,Headache,Painkiller,Melatonin,10,No Fever,Dispensed,D001,AP005,Consultation

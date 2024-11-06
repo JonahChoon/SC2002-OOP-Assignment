@@ -1,0 +1,11 @@
+User ID,Password,Role,First Login
+P1001,5f4dcc3b5aa765d61d8327deb882cf99,Patient,TRUE
+P1002,5f4dcc3b5aa765d61d8327deb882cf99,Patient,TRUE
+P1003,5f4dcc3b5aa765d61d8327deb882cf99,Patient,TRUE
+P1004,5f4dcc3b5aa765d61d8327deb882cf99,Patient,TRUE
+P1005,5f4dcc3b5aa765d61d8327deb882cf99,Patient,TRUE
+D001,5f4dcc3b5aa765d61d8327deb882cf99,Doctor,TRUE
+D002,5f4dcc3b5aa765d61d8327deb882cf99,Doctor,TRUE
+P001,5f4dcc3b5aa765d61d8327deb882cf99,Pharmacist,TRUE
+P002,5f4dcc3b5aa765d61d8327deb882cf99,Pharmacist,TRUE
+A001,5f4dcc3b5aa765d61d8327deb882cf99,Administrator,TRUE

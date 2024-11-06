@@ -1,0 +1,6 @@
+﻿Staff ID,Name,Role,Gender,Age,Email Address,Contact Number,Deactivated
+D001,John Smith,Doctor,Male,45,john@example.com,91111111,FALSE
+D002,Emily Clarke,Doctor,Female,38,emily@example.com,91111112,FALSE
+P001,Mark Lee,Pharmacist,Male,29,mark@example.com,91111113,FALSE
+P002,Sue Sharp,Pharmacist,Female,22,sue@example.com,91111114,FALSE
+A001,Sarah Lee,Administrator,Female,40,sarah@example.com,91111115,FALSE
