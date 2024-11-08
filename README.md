@@ -1,6 +1,6 @@
-![Banner](banner.png)
 <h1 align="center">
   <img src="banner.png">
+  <br>
   <br>
   Hospital Management System
   <br>
