@@ -119,7 +119,7 @@ Follow these steps to set up the Hospital Management System on your local machin
     a)	No excel files are opened while the HMS is running (E.g. Patient_Records.csv)
     b)	There is at least one Patient, Doctor, Pharmacist and Administrator in the HMS at all times
     c)	Each Patient’s appointment with a Doctor is 1 hour long (E.g. 0900 to 1000 hrs)
-    d)  Each Patient will only book maximum 1 appointment per day with each Doctor
+    d)	Each Patient will only book maximum 1 appointment per day with each Doctor
     e)	Doctors do not take last-minute MC or leave
     f)	Patients receive prescription on same day of appointment
     g)	Low medicine stock is approved on same day of request
