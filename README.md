@@ -16,7 +16,7 @@
   <a href="#4-test-cases">Test Cases</a>
 </p>
 
-![Banner](banner.png)
+<center>![Banner](banner.png)</center>
 
 ## Overview
 The Hospital Management System (HMS) is a command-line application built using Java, designed to automate and streamline hospital operations, including patient management, appointment scheduling, staff management, and billing. This project emphasizes the application of Object-Oriented Design principles and collaborative development practices.
