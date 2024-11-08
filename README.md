@@ -96,7 +96,9 @@ Follow these steps to set up the Hospital Management System on your local machin
     │   ├── Patient_Records.csv 📂
     │   └── Staff_Records.csv 🧑‍⚕️
     ├───banner.png
-    ├───Test Case Guide.docx     // Document detailing HMS test cases, with detailed input and output
+    ├───Test Case Showcase     
+    │   ├── Test Case Guide // Document detailing HMS test cases, with detailed input and output
+    │   └── Test Case Video.txt
     └───src
         └───sc2002
             ├── Administrator.java          // Represents an Administrator user who can manage various tasks within the system.
@@ -125,6 +127,6 @@ Follow these steps to set up the Hospital Management System on your local machin
     h)	Any Doctor removed by Administrator do not have any upcoming appointments with any Patient
 
 ## 4. Test Cases
-   - 4.1 Kindly refer to the "Test Case Guide.docx" file for full breakdown of the required test cases
+   - 4.1 Kindly refer to the "Test Case Showcase" folder for video and test case guide on the full breakdown of the required test cases
    - 4.2 <a href="https://entuedu-my.sharepoint.com/:v:/g/personal/jchoon001_e_ntu_edu_sg/EQL8dz0N641Ei1W9d871tMABkQRx7WoDq4U-9rU-E9Qkrw?nav=eyJyZWZlcnJhbEluZm8iOnsicmVmZXJyYWxBcHAiOiJPbmVEcml2ZUZvckJ1c2luZXNzIiwicmVmZXJyYWxBcHBQbGF0Zm9ybSI6IldlYiIsInJlZmVycmFsTW9kZSI6InZpZXciLCJyZWZlcnJhbFZpZXciOiJNeUZpbGVzTGlua0NvcHkifX0&e=ig8S6K
 ">Link to Test Case Video</a>
