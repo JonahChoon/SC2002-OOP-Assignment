@@ -65,8 +65,6 @@ Follow these steps to set up the Hospital Management System on your local machin
 - Ensure the JDK is correctly configured.
 - Run the `Main.java` class.
 
----
-
 ### 1.4 Usage
 
 1.4.1. **Login**: Enter your Staff ID and Password.
