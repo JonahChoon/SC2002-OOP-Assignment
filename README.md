@@ -1,6 +1,5 @@
-
+![Banner](banner.png)
 <h1 align="center">
-  ![Banner](banner.png)
   <br>
   Hospital Management System
   <br>
