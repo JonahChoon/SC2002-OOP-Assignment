@@ -67,7 +67,7 @@ Follow these steps to set up the Hospital Management System on your local machin
 
 ---
 
-## 1.4 Usage
+### 1.4 Usage
 
 1.4.1. **Login**: Enter your Staff ID and Password.
    - **Note**: Change the default password after the first login
