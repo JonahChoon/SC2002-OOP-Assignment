@@ -98,6 +98,21 @@ Follow these steps to set up the Hospital Management System on your local machin
     ├───Test Case Showcase     
     │   ├── Test Case Guide // Document detailing HMS test cases, with detailed input and output
     │   └── Test Case Video.txt
+    ├───UML Class & Sequence Diagram    
+    │   ├── Roles Sequence Sub Diagram
+    │   │   ├── AdministratorSubDiagram.png
+    │   │   ├── AdministratorSubDiagram.wsd
+    │   │   ├── DoctorSubDiagram.png
+    │   │   ├── DoctorSubDiagram.wsd
+    │   │   ├── DoctorSubDiagram.png
+    │   │   ├── PatientSubDiagram.png
+    │   │   ├── PatientSubDiagram.wsd
+    │   │   ├── PharmacistSubDiagram.png
+    │   │   └── PharmacistSubDiagram.wsd
+    │   ├── HMS Class Diagram.jpg
+    │   ├── HMS Class Diagram.vpp
+    │   ├── HMS Sequence Diagram.png
+    │   └── HMS Sequence Diagram.wsd
     └───src
         └───sc2002
             ├── Administrator.java          // Represents an Administrator user who can manage various tasks within the system.
