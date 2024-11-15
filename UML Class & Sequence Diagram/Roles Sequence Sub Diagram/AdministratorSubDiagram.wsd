@@ -1,0 +1,229 @@
+@startuml
+title Hospital Management System (Administrator Sub Diagram)
+
+scale 2
+
+skinparam maxMessageSize 150
+skinparam sequenceBoxPadding 10     
+
+skinparam DefaultFontColor black
+skinparam sequenceMessageBackgroundColor white
+skinparam sequenceMessageFontColor black
+
+skinparam SequenceArrowThickness 2
+
+skinparam SequenceGroupBorderColor gray
+
+
+' Set font properties for all alt/group text
+skinparam sequenceGroupFontName Arial
+skinparam sequenceGroupFontSize 14
+skinparam sequenceGroupFontColor black
+skinparam sequenceGroupBackgroundColor white
+
+
+
+!theme aws-orange
+
+actor "All Users" as AllUsers
+actor Administrator #LightYellow
+
+skinparam ParticipantFontColor black
+skinparam ParticipantFontSize 14
+skinparam ParticipantFontName Arial Black
+
+participant LoginHandler #lavender
+participant MenuHandler #lightgray
+participant AppointmentSlotHandler #red
+participant HospitalStaffHandler #LightBlue
+participant PrescriptionHandler #LightSeaGreen
+
+alt Master_LoginData.csv Role: Administrator
+    AllUsers -> Administrator: switch(Administrator)
+end
+
+Group Role: Administrator
+    Administrator -> MenuHandler : displayAdministratorMenu()
+    activate Administrator #LightYellow
+    activate MenuHandler
+    note over MenuHandler
+    Administrator Menu:
+    1. View and Manage Hospital Staff
+    2. View Appointments details
+    3. View and Manage Medication Inventory
+    4. Approve Replenishment Requests
+    5. View Login Logs File
+    6. Logout
+    end note
+    MenuHandler --> Administrator : Show Menu Options
+    deactivate MenuHandler
+    Administrator -> Administrator : scanner(choice)
+    alt Invalid Input
+        Administrator -[#red]-> Administrator :<font color=red><b>"Invalid choice. Please try again."
+    end
+    group choice(1) = View and Manage Hospital Staff
+        Administrator -[#blue]> HospitalStaffHandler: manageStaffMenu(scanner)
+        activate HospitalStaffHandler #LightBlue
+        Group choice(1) = View Hospital Staff
+            HospitalStaffHandler -> HospitalStaffHandler:displayStaffCategory\n("Doctor", doctors);
+            HospitalStaffHandler -> HospitalStaffHandler:displayStaffCategory\n("Pharmacist", pharmacists);
+            HospitalStaffHandler -> HospitalStaffHandler:displayStaffCategory\n("Administrator", administrators);
+            HospitalStaffHandler -[#green]-> Administrator:<font color=green><b>viewHospitalStaff()
+        end
+        Group choice(2) = Add Hospital Staff
+            HospitalStaffHandler --> Administrator: "Add New Hospital Staff"
+            loop until Complete
+                Administrator -> HospitalStaffHandler: scanner(staffData)
+                note over Administrator
+                Validation for: 
+                Full Name
+                Role
+                Gender
+                Age
+                Email
+                Contact Number
+                end note
+                HospitalStaffHandler -[#green]-> Administrator:<font color=green><b>Confirmation
+            end
+        end
+        Group choice(3) = Update Hospital Staff
+            HospitalStaffHandler -> HospitalStaffHandler:displayStaffCategory\n("Doctor", doctors);
+            HospitalStaffHandler -> HospitalStaffHandler:displayStaffCategory\n("Pharmacist", pharmacists);
+            HospitalStaffHandler -> HospitalStaffHandler:displayStaffCategory\n("Administrator", administrators);
+            HospitalStaffHandler --> Administrator: "Choose an Option"
+            Administrator -> HospitalStaffHandler: scanner(choice)
+            Group choice(1) = Update Staff Email Address
+                HospitalStaffHandler --> Administrator: "Enter the Staff ID to update email: "
+                Administrator -> HospitalStaffHandler: scanner(staffID)
+                alt Invalid staffID
+                    HospitalStaffHandler -[#red]-> Administrator :<font color=red><b>"Error: Staff ID " + staffID + " not found."
+                end
+                HospitalStaffHandler --> Administrator: "Enter new Email Address: "
+                Administrator -> HospitalStaffHandler: scanner(newEmail)
+                alt Invalid Email Format
+                    HospitalStaffHandler -[#red]-> Administrator :<font color=red><b>"Invalid email format. Must be in format XXX@XXX.XXX"
+                end
+                HospitalStaffHandler -[#green]-> Administrator:<font color=green><b>"Email updated successfully for Staff ID: [staffID]"
+                
+            end
+            Group choice(2) = Update Staff Contact Number
+                HospitalStaffHandler --> Administrator: "Enter the Staff ID to update contact number: "
+                Administrator -> HospitalStaffHandler: scanner(staffID)
+                alt Invalid staffID
+                    HospitalStaffHandler -[#red]-> Administrator :<font color=red><b>"Error: Staff ID " + staffID + " not found."
+                end
+                HospitalStaffHandler --> Administrator: "Enter new Contact Number: "
+                Administrator -> HospitalStaffHandler: scanner(newContact)
+                alt Invalid Contact Number
+                    HospitalStaffHandler -[#red]-> Administrator :<font color=red><b>"Contact number must be 8 digits and start with 8 or 9"
+                end
+                HospitalStaffHandler -[#green]-> Administrator:<font color=green><b>"Contact Number updated successfully for Staff ID: [staffID]"
+            end
+            Group choice(3) = Update Password
+                HospitalStaffHandler --> Administrator: "Enter the Staff ID to update password: "
+                Administrator -> HospitalStaffHandler: scanner(staffID)
+                alt Invalid staffID
+                    HospitalStaffHandler -[#red]-> Administrator :<font color=red><b>"Error: Staff ID " + staffID + " not found."
+                end
+                HospitalStaffHandler --> Administrator: "Enter new Password (must contain at least 8 characters, including uppercase, lowercase, digit, and special character): "
+                Administrator -> HospitalStaffHandler: scanner(newPassword)
+                HospitalStaffHandler -> LoginHandler: isValidPassword
+                activate LoginHandler #lavender
+                note over LoginHandler
+                Password requires:
+                -   8 Characters
+                -   Uppercase
+                -   Lowercase
+                -   Digit
+                -   Special Characters
+                end note
+                LoginHandler -> HospitalStaffHandler: return isValidPassword
+                deactivate LoginHandler
+                alt Invalid Password
+                    HospitalStaffHandler -[#red]-> Administrator :<font color=red><b>"Password does not meet complexity requirements.""
+                end
+                HospitalStaffHandler -[#green]-> Administrator:<font color=green><b>"Password updated successfully for Staff ID: " + staffID
+            end
+            Group choice(4) = Return to Main Menu
+                HospitalStaffHandler -[#green]-> Administrator:<font color=green><b>Return to Main Menu
+            end
+        end
+        Group choice(4) = Delete Hospital Staff
+            HospitalStaffHandler --> Administrator: "Enter the Staff ID to deactivate: "
+                Administrator -> HospitalStaffHandler: scanner(staffID)
+                alt Invalid staffID
+                    HospitalStaffHandler -[#red]-> Administrator :<font color=red><b>"Error: Staff ID " + staffID + " not found."
+                end
+                HospitalStaffHandler --> Administrator: "Are you sure you want to deactivate Staff ID " + staffID + "(Y/N): "
+                Administrator -> HospitalStaffHandler: scanner(confirmation)
+                alt confirmation = N
+                    HospitalStaffHandler -[#green]-> Administrator:<font color=green><b>"Deactivation Canceled."
+                end
+                HospitalStaffHandler --> Administrator: "Enter your administrator ID for confirmation: "
+                Administrator -> HospitalStaffHandler: scanner(adminID)
+                HospitalStaffHandler --> Administrator: "Enter your administrator password for confirmation: "
+                Administrator -> HospitalStaffHandler: scanner(adminPassword)
+                HospitalStaffHandler -> LoginHandler: authenticate(adminID,adminPassword)
+                activate LoginHandler #lavender
+                LoginHandler -> HospitalStaffHandler: return adminRole
+                deactivate LoginHandler
+                alt Incorrect Credentials
+                    HospitalStaffHandler -[#red]-> Administrator:<font color=red><b>"Incorrect Password. Deactivation aborted."
+                end
+                HospitalStaffHandler -[#green]-> Administrator:<font color=green><b>"Staff ID " + staffID + " has been deactivated successfully."
+        end
+        Group choice(5) = Return to Main Menu
+            HospitalStaffHandler -[#green]-> Administrator:<font color=green><b>return
+        end
+        deactivate HospitalStaffHandler
+    end
+    group choice(2) = View Appointments details
+        Administrator -[#blue]> AppointmentSlotHandler: viewAllAppointmentsAndOutcomesForAdmin()
+        activate AppointmentSlotHandler #red
+        AppointmentSlotHandler -> AppointmentSlotHandler: displayAppointmentListForAdmin\n(upcomingAppointments);
+        AppointmentSlotHandler -> AppointmentSlotHandler: displayAppointmentListForAdmin\n(cancelledAppointments);
+        AppointmentSlotHandler -> AppointmentSlotHandler: displayCompletedAppointmentsForAdmin\n(completedAppointments);
+        AppointmentSlotHandler -[#green]-> Administrator:<font color=green><b>Display Appointments and Outcomes for Admin
+        deactivate AppointmentSlotHandler
+    end
+
+    group choice(3) = View and Manage Medication Inventory
+        Administrator -[#blue]> PrescriptionHandler: viewMedicineStock()
+        activate PrescriptionHandler #LightSeaGreen
+        PrescriptionHandler --> Administrator: Display Medicine Stock
+        Administrator -> PrescriptionHandler: viewAllMedicineRequests()
+        PrescriptionHandler -[#green]-> Administrator:<font color=green><b>Display Medicine Requests
+        deactivate PrescriptionHandler
+    end
+    group choice(4) = Approve Replenishment Requests
+        Administrator -[#blue]> PrescriptionHandler: viewMedicineStock()
+        activate PrescriptionHandler #LightSeaGreen
+        PrescriptionHandler --> Administrator: Display Medicine Stock
+        Administrator -> PrescriptionHandler: approveReplenishmentRequests()
+        PrescriptionHandler --> Administrator:"Enter the number of request to approve: "
+        Administrator -> PrescriptionHandler: scanner(selection)
+        alt Invalid Input
+            PrescriptionHandler -[#red]-> Administrator:<font color=red><b>"Invalid input. Operation Cancelled"
+        end
+        PrescriptionHandler -[#green]-> Administrator:<font color=green><b>"Updated stock for %s. New stock: %d%n", medicineName, newStock
+        deactivate PrescriptionHandler
+
+    end
+    group choice(5) = View Login Logs File
+        Administrator -[#blue]> LoginHandler: viewLoginActivity()
+        activate LoginHandler #lavender
+        LoginHandler  -[#green]-> Administrator:<font color=green><b>Prints Login Activity
+        deactivate LoginHandler
+    end
+    group choice(6) = Logout
+    Administrator -[#blue]> LoginHandler : logout(userID, "Administrator")
+            activate LoginHandler #lavender
+            LoginHandler --> Administrator : "Logging Out..."
+            deactivate LoginHandler
+    end
+    end
+            Administrator --> AllUsers : Logged Out
+            deactivate Administrator
+
+
+@enduml

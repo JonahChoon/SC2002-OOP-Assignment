@@ -1,0 +1,820 @@
+@startuml
+title Hospital Management System
+
+scale 2
+
+skinparam maxMessageSize 150
+skinparam sequenceBoxPadding 10     
+
+skinparam DefaultFontColor black
+skinparam sequenceMessageBackgroundColor white
+skinparam sequenceMessageFontColor black
+
+skinparam SequenceArrowThickness 2
+
+skinparam SequenceGroupBorderColor gray
+
+
+' Set font properties for all alt/group text
+skinparam sequenceGroupFontName Arial
+skinparam sequenceGroupFontSize 14
+skinparam sequenceGroupFontColor black
+skinparam sequenceGroupBackgroundColor white
+
+
+
+!theme aws-orange
+
+actor "All Users" as AllUsers
+
+
+
+actor Patient #lightCoral
+actor Doctor #LightGreen
+actor Pharmacist #LightBlue
+actor Administrator #LightYellow
+
+skinparam ParticipantFontColor black
+skinparam ParticipantFontSize 14
+skinparam ParticipantFontName Arial Black
+
+participant LoginHandler #lavender
+participant MenuHandler #lightgray
+participant MedicalRecordHandler #00ee77
+participant PersonalInfoHandler #aqua
+participant AppointmentSlotHandler #red
+participant DoctorRecordHandler #yellow
+participant HospitalStaffHandler #LightBlue
+participant PrescriptionHandler #LightSeaGreen
+
+
+AllUsers -[#blue]> LoginHandler :  <font color=blue><b>authenticate(userID, password)
+activate LoginHandler #lavender
+LoginHandler --[#green]-> AllUsers : <font color=green><b> return [role]
+group First Time Login
+    LoginHandler --> AllUsers :"This is your first login. You are required to change your password."
+    AllUsers -> LoginHandler : changePassword\n(userID, newPassword)
+    alt Password Meets Complexity
+        LoginHandler -[#green]-> AllUsers : <font color=green>"Password Successfully Changed. Press ENTER to continue..."<font color=green><b> return [role]
+    else Password Does Not Meet Complexity
+        LoginHandler -[#red]-> AllUsers : <font color=red><b>"Password does not meet complexity requirements."
+        note over LoginHandler
+        Password requires:
+        -   8 Characters
+        -   Uppercase
+        -   Lowercase
+        -   Digit
+        -   Special Characters
+        end note
+    end
+end
+
+alt Invalid UserID or Password
+    LoginHandler ---[#red]-> AllUsers : <font color=red><b> "Login failed. Invalid UserID or Password."
+else Account Deactivated
+    LoginHandler --[#red]-> AllUsers : <font color=red><b>"Account is deactivated. Please contact the administrator."
+end
+deactivate LoginHandler
+
+alt Master_LoginData.csv Role: Patient
+    AllUsers -> Patient: switch(Patient)
+else Master_LoginData.csv Role: Doctor
+    AllUsers -> Doctor: switch(Doctor)
+else Master_LoginData.csv Role: Pharmacist
+    AllUsers -> Pharmacist: switch(Pharmacist)
+else Master_LoginData.csv Role: Administrator
+    AllUsers -> Administrator: switch(Administrator)
+end
+
+group Role: Patient
+    Patient -> MenuHandler : displayPatientMenu()
+    activate Patient #pink
+    activate MenuHandler
+    note over MenuHandler
+        Patient Menu:
+        1. View Medical Record
+        2. Update Personal Information
+        3. View Available Appointment Slots
+        4. Schedule an Appointment
+        5. Reschedule an Appointment
+        6. Cancel an Appointment
+        7. View Scheduled Appointments
+        8. View Past Appointment Outcome Records
+        9. Logout
+    end note
+    MenuHandler --> Patient : Show Menu Options
+    deactivate MenuHandler
+    Patient -> Patient : scanner(choice)
+    alt Invalid Input
+    Patient -[#red]> Patient :<font color=red><b>"Invalid choice. Please try again."
+    end
+    group choice(1) = View Medical Record
+            Patient -[#blue]> MedicalRecordHandler : viewMedicalRecord(patientID)
+            activate MedicalRecordHandler #00ee77
+            MedicalRecordHandler -> MedicalRecordHandler: getPatientMedicalHistory(patientID) \nfrom "CSVdata/Patient_Diagnosis_Prescription.csv"
+            alt History Found
+                MedicalRecordHandler -[#green]-> Patient :  <font color=green><b> displayPatientDetails(patient), displayMedicalHistory(medicalHistory)
+            else No History
+                MedicalRecordHandler -[#red]-> Patient :  <font color=red><b> "No past diagnosis or treatments found."
+            end
+            deactivate MedicalRecordHandler
+    end
+    group choice(2) = Update Personal Information
+        Patient -[#blue]> PersonalInfoHandler : updatePersonalInformation()
+        activate PersonalInfoHandler #aqua
+            PersonalInfoHandler --> MedicalRecordHandler : displayPatientDetails(patient)
+            activate MedicalRecordHandler #00ee77
+            MedicalRecordHandler -> PersonalInfoHandler : displayPatientDetails(patient)
+            deactivate MedicalRecordHandler
+            PersonalInfoHandler --> Patient: display Update Personal Information menu
+            group Update Email Address
+                Patient -> PersonalInfoHandler: updateEmailAddress(patient,scanner)
+                PersonalInfoHandler --> Patient: "Enter new email address:"
+                Patient -> PersonalInfoHandler: setEmailAddress(email)
+                    alt Valid Email
+                        PersonalInfoHandler -> PersonalInfoHandler: saveUpdatedPatientInfo(patient)
+                        PersonalInfoHandler -[#green]-> Patient:<font color=green><b>"Email address updated successfully"
+                    else Invalid Email
+                        PersonalInfoHandler -[#red]-> Patient:<font color=red><b>"Invalid email format. Try again."
+                                note over PersonalInfoHandler
+                                Email Address must
+                                be in format 
+                                XXX@XXX.XXX
+                                end note
+                    end
+            end
+            group Update Phone number
+                Patient -[#blue]> PersonalInfoHandler: updatePhoneNumber()
+                PersonalInfoHandler --> Patient: "Enter new phone number:"
+                Patient -> PersonalInfoHandler: setPhoneNumber(phone)
+                    alt Valid Phone Number
+                        PersonalInfoHandler -> PersonalInfoHandler: saveUpdatedPatientInfo(patient)
+                        PersonalInfoHandler --[#green]-> Patient: <font color=green><b>"Phone number updated successfully"
+                    else Invalid Phone Number
+                        PersonalInfoHandler --[#red]-> Patient:<font color=red><b>"Invalid phone number format. Try again."
+                        note over PersonalInfoHandler
+                                Phone Number must have:
+                                -   8 Digits
+                                -   Start with "8" or "9"
+                        end note
+                    end
+            end
+            Group Update Password
+                Patient -[#blue]> PersonalInfoHandler: updatePassword()
+                PersonalInfoHandler --> Patient: "Enter new Password (must contain at least 8 characters, including uppercase, lowercase, digit, and special character): "
+                Patient -> PersonalInfoHandler: scanner(newPassword)
+                PersonalInfoHandler --> LoginHandler: isValidPassword(newPassword)
+                deactivate PersonalInfoHandler
+                activate LoginHandler #lavender
+                    alt Password Meets Complexity
+                        LoginHandler -> LoginHandler: Compare oldPassword with newPassword
+                        alt Non-Reused Password
+                            LoginHandler -> LoginHandler: changePassword(patient.getPatientID(), newPassword())
+                            LoginHandler -[#green]-> Patient: <font color=green><b>"Password updated successfully."
+                        else Reused Password
+                            LoginHandler -[#red]-> Patient:<font color=red><b>"New password cannot be the same as the current password."
+                        end
+                    else Password Does Not Meet Complexity
+                        LoginHandler -[#red]-> Patient:<font color=red><b>"Password must contain at least 1 uppercase letter, 1 lowercase letter, 1 digit, 1 special character, and be at least 8 characters long."
+                    deactivate LoginHandler
+                end
+    end
+            end
+        Group choice(3) = View Available Appointment
+        Patient -[#blue]> AppointmentSlotHandler : viewAvailableAppointmentSlots()
+        activate AppointmentSlotHandler #red
+        AppointmentSlotHandler --> Patient: "Please select the Doctor ID and Date (Format: DXXX DD/MM/YY): "
+        Patient -> AppointmentSlotHandler: scanner(input)
+            AppointmentSlotHandler -> AppointmentSlotHandler: get Selected Doctor Availabilities
+            alt Time Slot Exists
+                AppointmentSlotHandler -[#green]-> Patient: <font color=green><b>Display Doctor Available Time Slots
+            else No Time Slot Exists
+                AppointmentSlotHandler -[#red]-> Patient:<font color=red><b>"No time slots available for selected date"
+            end
+        alt Invalid Input
+            AppointmentSlotHandler -[#red]-> Patient:<font color=red><b>"Invalid input format. Please use DXXX DD/MM/YY format."
+        end      
+        alt No Available Appointment Slots
+            AppointmentSlotHandler -[#red]-> Patient:<font color=red><b>"No available appointment slots found."
+        end
+        deactivate AppointmentSlotHandler #red
+        end
+        
+        group choice(4) = Schedule an Appointment
+            Patient -[#blue]> AppointmentSlotHandler : scheduleAppointment()
+            activate AppointmentSlotHandler #red
+            alt No Available Appointment Slots
+                AppointmentSlotHandler -[#red]-> Patient:<font color=red><b>"No available appointment slots found."
+            end
+            AppointmentSlotHandler --> Patient: "Please select the Doctor ID and Date (Format: DXXX DD/MM/YY): "
+            Patient -> AppointmentSlotHandler: scanner(input)
+            AppointmentSlotHandler -> AppointmentSlotHandler: doctorAvailabilities.get(selectedDoctorID)
+            AppointmentSlotHandler --> Patient: Show Time Slots of Selected Doctor
+            alt Invalid Input Format
+                AppointmentSlotHandler -[#red]-> Patient:<font color=red><b>"Invalid input format. Please use DXXX DD/MM/YY format."
+            end                
+            alt No Time Slots
+                AppointmentSlotHandler -[#red]-> Patient:<font color=red><b>"No time slots available for selected date"
+            end
+            Patient -> AppointmentSlotHandler: selectedSlot
+            AppointmentSlotHandler -> AppointmentSlotHandler: saveAppointment\n(patient, selectedDoctorID, confirmedTimeSlot)
+            AppointmentSlotHandler -> AppointmentSlotHandler: updateDoctorAvailability\n(selectedDoctorID, selectedDate, confirmedTimeSlot)
+            AppointmentSlotHandler -[#green]-> Patient: <font color=green><b>"Appointment scheduled successfully"
+            alt Invalid Selection
+                AppointmentSlotHandler -[#red]-> Patient:<font color=red><b>"Invalid selection. Returning to the main menu..."
+            end
+            deactivate AppointmentSlotHandler #red
+        end
+
+        group choice(5) = Reschedule an Appointment
+            Patient -[#blue]> AppointmentSlotHandler : rescheduleAppointment()
+            activate AppointmentSlotHandler #red
+            alt No Available Appointment Slots
+                AppointmentSlotHandler -[#red]-> Patient:<font color=red><b>"No available appointment slots found."
+            end
+            AppointmentSlotHandler --> Patient: "Enter the Appointment ID you want to reschedule: "
+            Patient -> AppointmentSlotHandler: scanner(selectedAppointment)
+            alt Invalid Input
+                AppointmentSlotHandler -[#red]-> Patient:<font color=red><b>"Invalid Appointment ID."
+            end
+            AppointmentSlotHandler -> AppointmentSlotHandler: doctorAvailabilities.get(selectedDoctorID)
+            AppointmentSlotHandler --> Patient: "Select a time slot number to reschedule:"
+            alt No Time Slots
+                AppointmentSlotHandler -[#red]-> Patient:<font color=red><b>"No time slots available for selected date"
+            end
+            alt Invalid Input Format
+                AppointmentSlotHandler -[#red]-> Patient:<font color=red><b>"Invalid input format. Please use DXXX DD/MM/YY format."
+            end                
+            Patient -> AppointmentSlotHandler: scanner(selectedAppointment)
+            alt Invalid Selection
+                AppointmentSlotHandler -[#red]-> Patient:<font color=red><b>"Invalid selection. Returning to the main menu..."
+            end
+            AppointmentSlotHandler -> AppointmentSlotHandler: updateAppointment\n(appointmentID...)
+            AppointmentSlotHandler -> AppointmentSlotHandler: updateDoctorAvailability\n(oldDoctorIDs...)
+            AppointmentSlotHandler -> AppointmentSlotHandler: updateDoctorAvailability\n(selectedDoctorID...)
+            AppointmentSlotHandler -[#green]-> Patient: <font color=green><b>"Appointment scheduled successfully"
+            deactivate AppointmentSlotHandler #red
+        end
+        
+        group choice(6) = Cancel an Appointment
+            Patient -[#blue]> AppointmentSlotHandler : cancelAppointment()
+            activate AppointmentSlotHandler #red
+            AppointmentSlotHandler --> Patient: "Enter the Appointment ID you want to cancel: "
+            Patient -> AppointmentSlotHandler: scanner(selectedAppointment)
+            alt Invalid Input
+                AppointmentSlotHandler -[#red]-> Patient:<font color=red><b>"Invalid Appointment ID."
+            end
+            AppointmentSlotHandler -> AppointmentSlotHandler: updateAppointmentCancellation\n(appointmentID...)
+            AppointmentSlotHandler -> AppointmentSlotHandler: updateDoctorAvailability\n(oldDoctorIDs...)
+            AppointmentSlotHandler -[#green]-> Patient: <font color=green><b>"Appointment cancelled successfully"
+            deactivate AppointmentSlotHandler #red
+        end
+    
+
+        group choice(7) = View Scheduled Appointment
+            Patient -[#blue]> AppointmentSlotHandler : viewAppointments()
+            activate AppointmentSlotHandler #red
+            alt Appointments Empty
+                AppointmentSlotHandler -[#red]-> Patient:<font color=red><b> "No upcoming appointments found for patient: [patientUserName]"
+            end
+            AppointmentSlotHandler -[#green]-> Patient: <font color=green><b>Display Appointments
+            deactivate AppointmentSlotHandler #red
+        end
+        group choice(8) = View Past Appointment Outcome
+        Patient -[#blue]> AppointmentSlotHandler : viewAllAppointmentsAndOutcomes(Scanner, Patient)
+        activate AppointmentSlotHandler #red
+        AppointmentSlotHandler -[#green]-> Patient: <font color=green><b>displayAppointmentList(upcoming,cancelled,completed)
+        deactivate AppointmentSlotHandler #red
+        end
+
+        group choice(9) = Logout
+        Patient -[#blue]> LoginHandler : logout(userID, "Patient")
+        activate LoginHandler #lavender
+        LoginHandler --> Patient : "Logging Out..."
+        deactivate LoginHandler
+        end
+        end
+        Patient --> AllUsers: Logged Out
+        deactivate Patient
+
+        deactivate PersonalInfoHandler #aqua
+
+
+
+
+
+Group Role: Doctor
+    Doctor -> MenuHandler : displayDoctorMenu()
+    activate Doctor #LightGreen
+    activate MenuHandler
+    note over MenuHandler
+        Doctor Menu:
+        1. View Patient Medical Records
+        2. Update Patient Medical Records
+        3. View Personal Schedule
+        4. Set Availability for Appointments
+        5. Accept or Decline Appointment Requests
+        6. View Upcoming Appointments
+        7. Record Appointment Outcome
+        8. Logout
+    end note
+    MenuHandler --> Doctor : Show Menu Options
+    deactivate MenuHandler
+    Doctor -> Doctor : scanner(choice)
+    alt Invalid Input
+        Doctor -[#red]> Doctor :<font color=red><b>"Invalid choice. Please try again."
+    end
+    group choice(1) = View Patient Medical Record
+        Doctor -[#blue]> DoctorRecordHandler : viewAllPatientsUnderCare(doctorID)
+        activate DoctorRecordHandler #yellow
+        DoctorRecordHandler --> MedicalRecordHandler: get patientIDs with doctorID
+        activate MedicalRecordHandler #00ee77
+        MedicalRecordHandler -> DoctorRecordHandler: patientsUnderCare()
+        deactivate MedicalRecordHandler #00ee77
+        alt patientsUnderCare Empty
+            DoctorRecordHandler -[#red]> Doctor :<font color=red><b>"No patients found under the care of Doctor ID: [doctorID]"
+        end
+        DoctorRecordHandler -[#green]> Doctor :<font color=green><b>patientsUnderCare()
+        deactivate DoctorRecordHandler #yellow
+    end
+
+    group choice(2) = Update Patient Medical Record
+        Doctor -[#blue]> DoctorRecordHandler : updatePatientMedicalRecord(userID, Scanner)
+        activate DoctorRecordHandler #yellow
+        DoctorRecordHandler --> Doctor: "Please insert the Patient ID to update the medical information:"
+        Doctor -> DoctorRecordHandler: scanner(patientID)
+        alt Invalid PatientID
+            DoctorRecordHandler -[#red]> Doctor :<font color=red><b>"Invalid Patient ID Format. Please use PXXXX where X is a digit."
+        end
+        DoctorRecordHandler --> MedicalRecordHandler: getPatientMedicalHistory(patientID)
+        activate MedicalRecordHandler #00ee77
+        MedicalRecordHandler -> Doctor: history
+        alt Empty Medical Records
+            MedicalRecordHandler -[#red]> Doctor :<font color=red><b>"No medical records found for Patient ID: [patientID]"
+        end
+        deactivate MedicalRecordHandler #00ee77
+        DoctorRecordHandler --> Doctor: history, "Enter Appointment ID to update: "
+        Doctor -> DoctorRecordHandler: scanner(appointmentID)
+        alt Invalid appointmentID
+            DoctorRecordHandler -[#red]> Doctor :<font color=red><b>"Invalid Appointment ID format. Please use APXXX where X is a digit.
+        end
+        DoctorRecordHandler --> MedicalRecordHandler: MedicalHistory record(appointmentID)
+        activate MedicalRecordHandler #00ee77
+        alt No Matching Appointment Found
+            MedicalRecordHandler -[#red]> Doctor :<font color=red><b>"No matching appointment found."
+        end
+        MedicalRecordHandler -> DoctorRecordHandler: recordToUpdate
+        deactivate MedicalRecordHandler #00ee77
+        DoctorRecordHandler --> Doctor: "Choose an option"
+        Doctor -> DoctorRecordHandler: scanner(option)
+
+        alt Invalid Input
+            Doctor -[#red]-> DoctorRecordHandler :<font color=red><b> "Invalid Input"
+        end
+
+        Group 1. Update Type of Service
+            DoctorRecordHandler --> Doctor: "Available Type of Services:"
+            Doctor -> DoctorRecordHandler: scanner(newService)
+            alt Invalid Service Type
+                    DoctorRecordHandler -[#red]-> Doctor :<font color=red><b>"Invalid Type of Service. Please choose from the available options.""
+            end
+            DoctorRecordHandler -> DoctorRecordHandler: updateMedicalRecordInCSV()
+            DoctorRecordHandler -[#green]-> Doctor :<font color=green><b>"Medical record updated successfully"
+        end
+        Group 2. Update Diagnosis
+            DoctorRecordHandler --> Doctor: "Enter new Diagnosis"
+            Doctor -> DoctorRecordHandler: scanner(newDiagnosis)
+            alt Invalid Diagnosis
+                DoctorRecordHandler -[#red]-> Doctor :<font color=red><b>"Invalid input for Diagnosis. Only letters and spaces are allowed."
+            end
+            DoctorRecordHandler -> DoctorRecordHandler: updateMedicalRecordInCSV()
+            DoctorRecordHandler -[#green]-> Doctor :<font color=green><b>"Medical record updated successfully"
+        end
+        Group 3. Update Treatment
+            DoctorRecordHandler --> Doctor: "Enter new Treatment"
+            Doctor -> DoctorRecordHandler: scanner(newTreatment)
+            alt Invalid Treatment
+                DoctorRecordHandler -[#red]-> Doctor :<font color=red><b>"Invalid input for Treatment. Only letters and spaces are allowed."
+            end
+            DoctorRecordHandler -> DoctorRecordHandler: updateMedicalRecordInCSV()
+            DoctorRecordHandler -[#green]-> Doctor :<font color=green><b>"Medical record updated successfully"
+        end
+        Group 4. Update Case Notes
+            DoctorRecordHandler --> Doctor: "Enter new Case Notes"
+            Doctor -> DoctorRecordHandler: scanner(newCaseNotes)
+            DoctorRecordHandler -> DoctorRecordHandler: updateMedicalRecordInCSV()
+            DoctorRecordHandler -[#green]-> Doctor :<font color=green><b>"Medical record updated successfully"
+        end
+        deactivate DoctorRecordHandler
+        end
+    
+
+    group choice(3) = View Personal Schedule
+        Doctor -[#blue]> DoctorRecordHandler : viewDoctorAvailability(userID)
+        activate DoctorRecordHandler #yellow
+        alt availabilityMap Empty
+            DoctorRecordHandler -[#red]-> Doctor :<font color=red><b>"No available time slots found for Doctor ID: [doctorID]"
+        end
+        DoctorRecordHandler -[#green]-> Doctor :<font color=green><b>"[doctorID] Availability"
+        deactivate DoctorRecordHandler #yellow
+    end
+
+    group choice(4) = Set Availability for Appointments
+        Doctor -[#blue]> DoctorRecordHandler : setDoctorAvailability(userID, Scanner)
+        activate DoctorRecordHandler #yellow
+        DoctorRecordHandler --> Doctor: "Enter the date of availability (dd/MM/yy): "
+        Doctor -> DoctorRecordHandler: scanner(dateInput)
+        alt Invalid dateInput
+            DoctorRecordHandler -[#red]-> Doctor :<font color=red><b>"Invalid date format. Please use dd/MM/yy."
+        end
+        DoctorRecordHandler --> Doctor: "Enter the time range (e.g., 1100 - 1800): "
+        Doctor -> DoctorRecordHandler: scanner(timeRangeInput)
+        alt Invalid timeRangeInput
+            DoctorRecordHandler -[#red]-> Doctor :<font color=red><b>"Invalid time range format. Please enter a valid range."
+        end
+        DoctorRecordHandler -[#green]-> Doctor:<font color=green><b>"Availability set successfully for [date]"
+        deactivate DoctorRecordHandler #yellow
+    end
+
+    group choice(5) = Accept or Decline Appointment Requests
+        Doctor -[#blue]> DoctorRecordHandler : approveOrDisapproveAppointments(userID, Scanner)
+        activate DoctorRecordHandler #yellow
+        alt pendingAppointments Empty
+            DoctorRecordHandler -[#red]-> Doctor :<font color=red><b>"No pending appointments found for Doctor ID: [doctorID]"
+        end
+        DoctorRecordHandler --> Doctor: "Select Appointment ID to approve/decline"
+        Doctor -> DoctorRecordHandler: scanner(selectedAppointmentID)
+        alt Invalid appointmentID
+            DoctorRecordHandler -[#red]-> Doctor :<font color=red><b>"Invalid Appointment ID selected."
+        end
+        DoctorRecordHandler --> Doctor: "Do you want to approve this appointment(y/n)"
+        Doctor -> DoctorRecordHandler: decision
+        alt Invalid Decision
+            DoctorRecordHandler -[#red]-> Doctor :<font color=red><b>"Invalid decision. Please enter 'y' for approve or 'n' for decline."
+        end
+        group Approve Appointment
+            DoctorRecordHandler -> DoctorRecordHandler: updateAppointmentStatus\n(selectedAppointmentID, confirmed)
+            DoctorRecordHandler -[#green]-> Doctor:<font color=green><b> "Appointment confirmed successfully"
+        end
+        group Decline Appointment
+            DoctorRecordHandler -> DoctorRecordHandler: updateAppointmentStatus\n(selectedAppointmentID, cancelled)
+            DoctorRecordHandler -[#green]-> Doctor:<font color=green><b>"Appointment declined and slot made available again."
+        end
+        deactivate DoctorRecordHandler #yellow
+    end
+
+    group choice(6) = View Upcoming Appointments
+        Doctor -[#blue]> AppointmentSlotHandler : viewUpcomingAppointments(userID)
+        activate AppointmentSlotHandler #red
+        alt Appointments Empty
+            AppointmentSlotHandler -[#red]-> Doctor :<font color=red><b>"No upcoming appointments found for Patient: [patientID]"
+        end
+        AppointmentSlotHandler --> Doctor: appointment(patientID)
+        deactivate AppointmentSlotHandler #red
+    end
+
+    group choice(7) = Record Appointment Outcome
+        Doctor -[#blue]> AppointmentSlotHandler : recordAppointmentOutcome(userID, Scanner)
+        activate AppointmentSlotHandler #red
+        alt Appointments Empty
+            AppointmentSlotHandler -[#red]-> Doctor :<font color=red><b>"No upcoming appointments found for Doctor ID: [doctorID]"
+        end
+        AppointmentSlotHandler --> Doctor: "Select an Appointment ID: "
+        Doctor -> AppointmentSlotHandler: scanner(selectedAppointmentID)
+        AppointmentSlotHandler --> Doctor: "Are you sure you want to edit this(Yes/No)"
+        Doctor -> AppointmentSlotHandler: scanner(confirmation)
+        alt confirmation = No
+            AppointmentSlotHandler -[#green]-> Doctor:<font color=green><b>"Operation cancelled."
+        else confirmation = Yes
+            AppointmentSlotHandler --> Doctor: "Enter Diagnosis"
+            Doctor -> AppointmentSlotHandler: scanner(diagnosis)
+            AppointmentSlotHandler --> Doctor: "Enter Treatment"
+            Doctor -> AppointmentSlotHandler: scanner(treatment)
+            AppointmentSlotHandler -> AppointmentSlotHandler: loadMedicines()
+            alt Medicines Empty
+                AppointmentSlotHandler -[#red]-> Doctor :<font color=red><b>"No available medicines found."
+            end
+            AppointmentSlotHandler --> Doctor: "Enter Prescription (choose from the list): "
+            Doctor -> AppointmentSlotHandler: scanner(prescription)
+            AppointmentSlotHandler --> Doctor: "Enter Quantity"
+            Doctor -> AppointmentSlotHandler: scanner(quantityInput)
+            AppointmentSlotHandler --> Doctor: "Enter Case Notes:"
+            Doctor -> AppointmentSlotHandler: scanner(caseNotes)
+            AppointmentSlotHandler --> Doctor: "Enter Type of Service:"
+            Doctor -> AppointmentSlotHandler: scanner(typeOfService)
+            AppointmentSlotHandler -> AppointmentSlotHandler: appendDiagnosisToCSV, updateAppointmentOutcome
+            AppointmentSlotHandler -[#green]-> Doctor:<font color=green><b>"Appointment outcome recorded successfully."
+        end
+        deactivate AppointmentSlotHandler #red
+    end
+
+    group choice(8) = Logout
+        Doctor -[#blue]> LoginHandler : logout(userID, "Doctor")
+        activate LoginHandler #lavender
+        LoginHandler -[#green]-> Doctor :<font color=green><b>"Logging Out..."
+        deactivate LoginHandler
+        end
+end
+        Doctor --> AllUsers: Logged Out
+        deactivate Doctor
+
+
+
+
+
+
+Group Role: Pharmacist
+    Pharmacist -> MenuHandler : displayPharmacistMenu()
+    activate Pharmacist #LightBlue
+    activate MenuHandler
+    note over MenuHandler
+    Pharmacist Menu:
+    1. View Appointment Outcome Record
+    2. Update Prescription Status
+    3. View Medication Inventory
+    4. Submit Replenishment Request
+    5. Logout
+    end note
+    MenuHandler --> Pharmacist : Show Menu Options
+    deactivate MenuHandler
+        Pharmacist -> Pharmacist : scanner(choice)
+        
+        alt Invalid Input
+            Pharmacist -[#red]-> Pharmacist :<font color=red><b>"Invalid choice. Please try again."
+        end
+        
+        group choice(1) = View Pending Prescriptions
+            Pharmacist -[#blue]> PrescriptionHandler : viewPendingPrescriptions()
+            activate PrescriptionHandler #LightSeaGreen
+            PrescriptionHandler -> PrescriptionHandler : readPendingPrescriptionsFromCSV\n("data/Patient_Diagnosis_Prescription.csv") 
+            
+            alt No Prescriptions Found
+                PrescriptionHandler -[#red]-> Pharmacist :<font color=red><b>"No pending or dispensed prescriptions found."
+            end
+                PrescriptionHandler -[#green]> Pharmacist :<font color=green><b>pendingPrescriptions()
+                loop For Each Pending Prescription
+                    PrescriptionHandler -> PrescriptionHandler : displayPrescriptionDetails(prescription)
+                end
+            deactivate PrescriptionHandler
+        end
+
+        group choice(2) = Update Prescription Status
+            Pharmacist -[#blue]> PrescriptionHandler : updatePrescriptionStatus(scanner)
+            activate PrescriptionHandler #LightSeaGreen
+            PrescriptionHandler -> PrescriptionHandler : FileReader("data/Patient_Diagnosis_Prescription.csv")
+            PrescriptionHandler --> Pharmacist : Display pendingPescriptions()
+            PrescriptionHandler --> Pharmacist : "Enter the Appointment ID to dispense: "
+            Pharmacist -> PrescriptionHandler: scanner(appointmentID)
+            PrescriptionHandler --> Pharmacist: "Do you want to dispense this medication(Yes/No): "
+            Pharmacist -> PrescriptionHandler: scanner(confirmation)
+            alt confirmation = No
+                PrescriptionHandler -[#green]-> Pharmacist :<font color=green><b>"Dispensing cancelled."
+            end                
+                alt Insufficient Medicine Stock
+                    PrescriptionHandler -[#red]-> Pharmacist :<font color=red><b>"Fail to dispense medication. Insufficient stock."
+                end
+                    PrescriptionHandler -[#green]-> Pharmacist :<font color=green><b>"Medication dispensed successfully."
+            deactivate PrescriptionHandler
+        end
+
+        group choice(3) = View Medicine Stock
+            Pharmacist -[#blue]> PrescriptionHandler : viewMedicineStock(prescriptionName, quantityRequested)
+            activate PrescriptionHandler #LightSeaGreen
+            PrescriptionHandler -> PrescriptionHandler : FileReader("data/Medicine_Stock.csv")
+            PrescriptionHandler -> PrescriptionHandler : Check medicineStock().isEmpty
+            
+            alt Insufficient Medicine Stock
+                PrescriptionHandler -[#red]-> Pharmacist :<font color=red><b>"Not enough stock for [prescriptionName]."
+            end
+                PrescriptionHandler -> PrescriptionHandler : updateMedicineStock(prescriptionName, quantityRequested)
+                PrescriptionHandler -[#green]> Pharmacist :<font color=green><b>"Stock updated successfully."
+            
+            deactivate PrescriptionHandler 
+        end
+
+        group choice(4) = Submit Replenishment Request
+            Pharmacist -[#blue]> PrescriptionHandler : submitReplenishmentRequest(scanner, staffID)
+            activate PrescriptionHandler #LightSeaGreen
+            PrescriptionHandler -> PrescriptionHandler : viewMedicineStock()
+            PrescriptionHandler -> PrescriptionHandler : getAvailableMedicines()
+
+            alt No Available Medicine
+                PrescriptionHandler -[#red]-> Pharmacist :<font color=red><b>"No medicines available for replenishment."
+            end
+                PrescriptionHandler --> Pharmacist :display Available Medicine, "Enter the Medicine Name: "
+            Pharmacist -> PrescriptionHandler : scanner(medicineName)
+
+            alt Invalid medicineName
+                PrescriptionHandler -[#red]-> Pharmacist :<font color=red><b>"Invalid medicine name. Please select from the available medicines listed above."
+            end
+                PrescriptionHandler --> Pharmacist :"Enter the quantity to request: "
+            
+
+            Pharmacist -> PrescriptionHandler : scanner(requestedQuantity)
+            PrescriptionHandler -> PrescriptionHandler : submitReplenishmentRequest(requestedQuantity)
+            
+            alt Invalid Quantity
+                PrescriptionHandler -[#red]-> Pharmacist :<font color=red><b>"Invalid input for quantity. Please enter a number."
+            end
+                PrescriptionHandler -> PrescriptionHandler : writeReplenishmentRequest(medicineName, requestedQuantity, staffId)
+                PrescriptionHandler -[#green]> Pharmacist :<font color=green><b>"Replenishment request for " + medicineName + " has been recorded successfully."
+            
+            deactivate PrescriptionHandler
+        end
+
+        group choice(5) = Logout
+            Pharmacist -[#blue]> LoginHandler : logout(userID, "Pharmacist")
+            activate LoginHandler #lavender
+            LoginHandler --> Pharmacist : "Logging Out..."
+            deactivate LoginHandler
+            end
+            end
+            Pharmacist --> AllUsers : Logged Out
+            deactivate Pharmacist
+
+
+Group Role: Administrator
+    Administrator -> MenuHandler : displayAdministratorMenu()
+    activate Administrator #LightYellow
+    activate MenuHandler
+    note over MenuHandler
+    Administrator Menu:
+    1. View and Manage Hospital Staff
+    2. View Appointments details
+    3. View and Manage Medication Inventory
+    4. Approve Replenishment Requests
+    5. View Login Logs File
+    6. Logout
+    end note
+    MenuHandler --> Administrator : Show Menu Options
+    deactivate MenuHandler
+    Administrator -> Administrator : scanner(choice)
+    alt Invalid Input
+        Administrator -[#red]-> Administrator :<font color=red><b>"Invalid choice. Please try again."
+    end
+    group choice(1) = View and Manage Hospital Staff
+        Administrator -[#blue]> HospitalStaffHandler: manageStaffMenu(scanner)
+        activate HospitalStaffHandler #LightBlue
+        Group choice(1) = View Hospital Staff
+            HospitalStaffHandler -> HospitalStaffHandler:displayStaffCategory\n("Doctor", doctors);
+            HospitalStaffHandler -> HospitalStaffHandler:displayStaffCategory\n("Pharmacist", pharmacists);
+            HospitalStaffHandler -> HospitalStaffHandler:displayStaffCategory\n("Administrator", administrators);
+            HospitalStaffHandler -[#green]-> Administrator:<font color=green><b>viewHospitalStaff()
+        end
+        Group choice(2) = Add Hospital Staff
+            HospitalStaffHandler --> Administrator: "Add New Hospital Staff"
+            loop until Complete
+                Administrator -> HospitalStaffHandler: scanner(staffData)
+                note over Administrator
+                Validation for: 
+                Full Name
+                Role
+                Gender
+                Age
+                Email
+                Contact Number
+                end note
+                HospitalStaffHandler -[#green]-> Administrator:<font color=green><b>Confirmation
+            end
+        end
+        Group choice(3) = Update Hospital Staff
+            HospitalStaffHandler -> HospitalStaffHandler:displayStaffCategory\n("Doctor", doctors);
+            HospitalStaffHandler -> HospitalStaffHandler:displayStaffCategory\n("Pharmacist", pharmacists);
+            HospitalStaffHandler -> HospitalStaffHandler:displayStaffCategory\n("Administrator", administrators);
+            HospitalStaffHandler --> Administrator: "Choose an Option"
+            Administrator -> HospitalStaffHandler: scanner(choice)
+            Group choice(1) = Update Staff Email Address
+                HospitalStaffHandler --> Administrator: "Enter the Staff ID to update email: "
+                Administrator -> HospitalStaffHandler: scanner(staffID)
+                alt Invalid staffID
+                    HospitalStaffHandler -[#red]-> Administrator :<font color=red><b>"Error: Staff ID " + staffID + " not found."
+                end
+                HospitalStaffHandler --> Administrator: "Enter new Email Address: "
+                Administrator -> HospitalStaffHandler: scanner(newEmail)
+                alt Invalid Email Format
+                    HospitalStaffHandler -[#red]-> Administrator :<font color=red><b>"Invalid email format. Must be in format XXX@XXX.XXX"
+                end
+                HospitalStaffHandler -[#green]-> Administrator:<font color=green><b>"Email updated successfully for Staff ID: [staffID]"
+                
+            end
+            Group choice(2) = Update Staff Contact Number
+                HospitalStaffHandler --> Administrator: "Enter the Staff ID to update contact number: "
+                Administrator -> HospitalStaffHandler: scanner(staffID)
+                alt Invalid staffID
+                    HospitalStaffHandler -[#red]-> Administrator :<font color=red><b>"Error: Staff ID " + staffID + " not found."
+                end
+                HospitalStaffHandler --> Administrator: "Enter new Contact Number: "
+                Administrator -> HospitalStaffHandler: scanner(newContact)
+                alt Invalid Contact Number
+                    HospitalStaffHandler -[#red]-> Administrator :<font color=red><b>"Contact number must be 8 digits and start with 8 or 9"
+                end
+                HospitalStaffHandler -[#green]-> Administrator:<font color=green><b>"Contact Number updated successfully for Staff ID: [staffID]"
+            end
+            Group choice(3) = Update Password
+                HospitalStaffHandler --> Administrator: "Enter the Staff ID to update password: "
+                Administrator -> HospitalStaffHandler: scanner(staffID)
+                alt Invalid staffID
+                    HospitalStaffHandler -[#red]-> Administrator :<font color=red><b>"Error: Staff ID " + staffID + " not found."
+                end
+                HospitalStaffHandler --> Administrator: "Enter new Password (must contain at least 8 characters, including uppercase, lowercase, digit, and special character): "
+                Administrator -> HospitalStaffHandler: scanner(newPassword)
+                HospitalStaffHandler -> LoginHandler: isValidPassword
+                activate LoginHandler #lavender
+                note over LoginHandler
+                Password requires:
+                -   8 Characters
+                -   Uppercase
+                -   Lowercase
+                -   Digit
+                -   Special Characters
+                end note
+                LoginHandler -> HospitalStaffHandler: return isValidPassword
+                deactivate LoginHandler
+                alt Invalid Password
+                    HospitalStaffHandler -[#red]-> Administrator :<font color=red><b>"Password does not meet complexity requirements.""
+                end
+                HospitalStaffHandler -[#green]-> Administrator:<font color=green><b>"Password updated successfully for Staff ID: " + staffID
+            end
+            Group choice(4) = Return to Main Menu
+                HospitalStaffHandler -[#green]-> Administrator:<font color=green><b>Return to Main Menu
+            end
+        end
+        Group choice(4) = Delete Hospital Staff
+            HospitalStaffHandler --> Administrator: "Enter the Staff ID to deactivate: "
+                Administrator -> HospitalStaffHandler: scanner(staffID)
+                alt Invalid staffID
+                    HospitalStaffHandler -[#red]-> Administrator :<font color=red><b>"Error: Staff ID " + staffID + " not found."
+                end
+                HospitalStaffHandler --> Administrator: "Are you sure you want to deactivate Staff ID " + staffID + "(Y/N): "
+                Administrator -> HospitalStaffHandler: scanner(confirmation)
+                alt confirmation = N
+                    HospitalStaffHandler -[#green]-> Administrator:<font color=green><b>"Deactivation Canceled."
+                end
+                HospitalStaffHandler --> Administrator: "Enter your administrator ID for confirmation: "
+                Administrator -> HospitalStaffHandler: scanner(adminID)
+                HospitalStaffHandler --> Administrator: "Enter your administrator password for confirmation: "
+                Administrator -> HospitalStaffHandler: scanner(adminPassword)
+                HospitalStaffHandler -> LoginHandler: authenticate(adminID,adminPassword)
+                activate LoginHandler #lavender
+                LoginHandler -> HospitalStaffHandler: return adminRole
+                deactivate LoginHandler
+                alt Incorrect Credentials
+                    HospitalStaffHandler -[#red]-> Administrator:<font color=red><b>"Incorrect Password. Deactivation aborted."
+                end
+                HospitalStaffHandler -[#green]-> Administrator:<font color=green><b>"Staff ID " + staffID + " has been deactivated successfully."
+        end
+        Group choice(5) = Return to Main Menu
+            HospitalStaffHandler -[#green]-> Administrator:<font color=green><b>return
+        end
+        deactivate HospitalStaffHandler
+    end
+    group choice(2) = View Appointments details
+        Administrator -[#blue]> AppointmentSlotHandler: viewAllAppointmentsAndOutcomesForAdmin()
+        activate AppointmentSlotHandler #red
+        AppointmentSlotHandler -> AppointmentSlotHandler: displayAppointmentListForAdmin\n(upcomingAppointments);
+        AppointmentSlotHandler -> AppointmentSlotHandler: displayAppointmentListForAdmin\n(cancelledAppointments);
+        AppointmentSlotHandler -> AppointmentSlotHandler: displayCompletedAppointmentsForAdmin\n(completedAppointments);
+        AppointmentSlotHandler -[#green]-> Administrator:<font color=green><b>Display Appointments and Outcomes for Admin
+        deactivate AppointmentSlotHandler
+    end
+
+    group choice(3) = View and Manage Medication Inventory
+        Administrator -[#blue]> PrescriptionHandler: viewMedicineStock()
+        activate PrescriptionHandler #LightSeaGreen
+        PrescriptionHandler --> Administrator: Display Medicine Stock
+        Administrator -> PrescriptionHandler: viewAllMedicineRequests()
+        PrescriptionHandler -[#green]-> Administrator:<font color=green><b>Display Medicine Requests
+        deactivate PrescriptionHandler
+    end
+    group choice(4) = Approve Replenishment Requests
+        Administrator -[#blue]> PrescriptionHandler: viewMedicineStock()
+        activate PrescriptionHandler #LightSeaGreen
+        PrescriptionHandler --> Administrator: Display Medicine Stock
+        Administrator -> PrescriptionHandler: approveReplenishmentRequests()
+        PrescriptionHandler --> Administrator:"Enter the number of request to approve: "
+        Administrator -> PrescriptionHandler: scanner(selection)
+        alt Invalid Input
+            PrescriptionHandler -[#red]-> Administrator:<font color=red><b>"Invalid input. Operation Cancelled"
+        end
+        PrescriptionHandler -[#green]-> Administrator:<font color=green><b>"Updated stock for %s. New stock: %d%n", medicineName, newStock
+        deactivate PrescriptionHandler
+
+    end
+    group choice(5) = View Login Logs File
+        Administrator -[#blue]> LoginHandler: viewLoginActivity()
+        activate LoginHandler #lavender
+        LoginHandler  -[#green]-> Administrator:<font color=green><b>Prints Login Activity
+        deactivate LoginHandler
+    end
+    group choice(6) = Logout
+    Administrator -[#blue]> LoginHandler : logout(userID, "Administrator")
+            activate LoginHandler #lavender
+            LoginHandler --> Administrator : "Logging Out..."
+            deactivate LoginHandler
+    end
+    end
+            Administrator --> AllUsers : Logged Out
+            deactivate Administrator
+
+
+@enduml

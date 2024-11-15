@@ -1,0 +1,156 @@
+
+@startuml
+title Hospital Management System (Pharmacist Sub Diagram)
+
+scale 2
+
+skinparam maxMessageSize 150
+skinparam sequenceBoxPadding 10     
+
+skinparam DefaultFontColor black
+skinparam sequenceMessageBackgroundColor white
+skinparam sequenceMessageFontColor black
+
+skinparam SequenceArrowThickness 2
+
+skinparam SequenceGroupBorderColor gray
+
+
+' Set font properties for all alt/group text
+skinparam sequenceGroupFontName Arial
+skinparam sequenceGroupFontSize 14
+skinparam sequenceGroupFontColor black
+skinparam sequenceGroupBackgroundColor white
+
+
+
+!theme aws-orange
+
+actor "All Users" as AllUsers
+
+
+actor Pharmacist #LightBlue
+
+
+skinparam ParticipantFontColor black
+skinparam ParticipantFontSize 14
+skinparam ParticipantFontName Arial Black
+
+participant LoginHandler #lavender
+participant MenuHandler #lightgray
+participant PrescriptionHandler #LightSeaGreen
+
+alt Master_LoginData.csv Role: Pharmacist
+    AllUsers -> Pharmacist: switch(Pharmacist)
+end
+Group Role: Pharmacist
+    Pharmacist -> MenuHandler : displayPharmacistMenu()
+    activate Pharmacist #LightBlue
+    activate MenuHandler
+    note over MenuHandler
+    Pharmacist Menu:
+    1. View Appointment Outcome Record
+    2. Update Prescription Status
+    3. View Medication Inventory
+    4. Submit Replenishment Request
+    5. Logout
+    end note
+    MenuHandler --> Pharmacist : Show Menu Options
+    deactivate MenuHandler
+        Pharmacist -> Pharmacist : scanner(choice)
+        
+        alt Invalid Input
+            Pharmacist -[#red]-> Pharmacist :<font color=red><b>"Invalid choice. Please try again."
+        end
+        
+        group choice(1) = View Pending Prescriptions
+            Pharmacist -[#blue]> PrescriptionHandler : viewPendingPrescriptions()
+            activate PrescriptionHandler #LightSeaGreen
+            PrescriptionHandler -> PrescriptionHandler : readPendingPrescriptionsFromCSV\n("data/Patient_Diagnosis_Prescription.csv") 
+            
+            alt No Prescriptions Found
+                PrescriptionHandler -[#red]-> Pharmacist :<font color=red><b>"No pending or dispensed prescriptions found."
+            end
+                PrescriptionHandler -[#green]> Pharmacist :<font color=green><b>pendingPrescriptions()
+                loop For Each Pending Prescription
+                    PrescriptionHandler -> PrescriptionHandler : displayPrescriptionDetails(prescription)
+                end
+            deactivate PrescriptionHandler
+        end
+
+        group choice(2) = Update Prescription Status
+            Pharmacist -[#blue]> PrescriptionHandler : updatePrescriptionStatus(scanner)
+            activate PrescriptionHandler #LightSeaGreen
+            PrescriptionHandler -> PrescriptionHandler : FileReader("data/Patient_Diagnosis_Prescription.csv")
+            PrescriptionHandler --> Pharmacist : Display pendingPescriptions()
+            PrescriptionHandler --> Pharmacist : "Enter the Appointment ID to dispense: "
+            Pharmacist -> PrescriptionHandler: scanner(appointmentID)
+            PrescriptionHandler --> Pharmacist: "Do you want to dispense this medication(Yes/No): "
+            Pharmacist -> PrescriptionHandler: scanner(confirmation)
+            alt confirmation = No
+                PrescriptionHandler -[#green]-> Pharmacist :<font color=green><b>"Dispensing cancelled."
+            end                
+                alt Insufficient Medicine Stock
+                    PrescriptionHandler -[#red]-> Pharmacist :<font color=red><b>"Fail to dispense medication. Insufficient stock."
+                end
+                    PrescriptionHandler -[#green]-> Pharmacist :<font color=green><b>"Medication dispensed successfully."
+            deactivate PrescriptionHandler
+        end
+
+        group choice(3) = View Medicine Stock
+            Pharmacist -[#blue]> PrescriptionHandler : viewMedicineStock(prescriptionName, quantityRequested)
+            activate PrescriptionHandler #LightSeaGreen
+            PrescriptionHandler -> PrescriptionHandler : FileReader("data/Medicine_Stock.csv")
+            PrescriptionHandler -> PrescriptionHandler : Check medicineStock().isEmpty
+            
+            alt Insufficient Medicine Stock
+                PrescriptionHandler -[#red]-> Pharmacist :<font color=red><b>"Not enough stock for [prescriptionName]."
+            end
+                PrescriptionHandler -> PrescriptionHandler : updateMedicineStock(prescriptionName, quantityRequested)
+                PrescriptionHandler -[#green]> Pharmacist :<font color=green><b>"Stock updated successfully."
+            
+            deactivate PrescriptionHandler 
+        end
+
+        group choice(4) = Submit Replenishment Request
+            Pharmacist -[#blue]> PrescriptionHandler : submitReplenishmentRequest(scanner, staffID)
+            activate PrescriptionHandler #LightSeaGreen
+            PrescriptionHandler -> PrescriptionHandler : viewMedicineStock()
+            PrescriptionHandler -> PrescriptionHandler : getAvailableMedicines()
+
+            alt No Available Medicine
+                PrescriptionHandler -[#red]-> Pharmacist :<font color=red><b>"No medicines available for replenishment."
+            end
+                PrescriptionHandler --> Pharmacist :display Available Medicine, "Enter the Medicine Name: "
+            Pharmacist -> PrescriptionHandler : scanner(medicineName)
+
+            alt Invalid medicineName
+                PrescriptionHandler -[#red]-> Pharmacist :<font color=red><b>"Invalid medicine name. Please select from the available medicines listed above."
+            end
+                PrescriptionHandler --> Pharmacist :"Enter the quantity to request: "
+            
+
+            Pharmacist -> PrescriptionHandler : scanner(requestedQuantity)
+            PrescriptionHandler -> PrescriptionHandler : submitReplenishmentRequest(requestedQuantity)
+            
+            alt Invalid Quantity
+                PrescriptionHandler -[#red]-> Pharmacist :<font color=red><b>"Invalid input for quantity. Please enter a number."
+            end
+                PrescriptionHandler -> PrescriptionHandler : writeReplenishmentRequest(medicineName, requestedQuantity, staffId)
+                PrescriptionHandler -[#green]> Pharmacist :<font color=green><b>"Replenishment request for " + medicineName + " has been recorded successfully."
+            
+            deactivate PrescriptionHandler
+        end
+
+        group choice(5) = Logout
+            Pharmacist -[#blue]> LoginHandler : logout(userID, "Pharmacist")
+            activate LoginHandler #lavender
+            LoginHandler --> Pharmacist : "Logging Out..."
+            deactivate LoginHandler
+            end
+            end
+            Pharmacist --> AllUsers : Logged Out
+            deactivate Pharmacist
+
+
+@enduml
