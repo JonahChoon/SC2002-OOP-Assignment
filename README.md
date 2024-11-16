@@ -14,7 +14,8 @@
   <a href="#1-setup-and-usage">Setup</a> •
   <a href="#2-project-structure">Structure</a> •
   <a href="#3-assumptions-and-constraints">Constraints</a>  •
-  <a href="#4-test-cases">Test Cases</a>
+  <a href="#4-test-cases">Test Cases</a>  •
+  <a href="#5-uml-diagrams">UML Diagrams</a>
 </p>
 
 
@@ -31,6 +32,7 @@ The Hospital Management System (HMS) is a command-line application built using J
 2. <a href = "#2-project-structure">Project Structure</a>
 3. <a href = "#3-assumptions-and-constraints">Assumptions & Constraints</a>
 4. <a href="#4-test-cases">Test Cases</a>
+5. <a href="#5-uml-diagrams">UML Diagrams</a>
 
 ## 1. Setup and Usage
 
@@ -51,12 +53,12 @@ Follow these steps to set up the Hospital Management System on your local machin
 
 1.2.2. **Navigate to the Project Directory**
    ```bash
-   cd SC2002-OOP-Assignment
+   cd SC2002-OOP-Assignment-main
    ```
 
 1.2.3. **Run the Application**
    ```bash
-   java -cp bin main
+   java -cp bin sc2002.Main
    ```
    - Make sure to run this from the project's root directory.
 
@@ -82,6 +84,9 @@ Follow these steps to set up the Hospital Management System on your local machin
 ## 2. Project Structure
     SC2002-OOP-Assignment
     ├───JavaDoc
+    ├───Entity Relationship Diagram
+    │   ├── Entity Relationship Diagram_with ER Arrows.drawio
+    │   └── Entity Relationship Diagram_with ER Arrows.png
     ├───bin
     │   └───sc2002
     ├───data
@@ -95,6 +100,7 @@ Follow these steps to set up the Hospital Management System on your local machin
     │   ├── Patient_Records.csv 📂
     │   └── Staff_Records.csv 🧑‍⚕️
     ├───banner.png
+    ├───SCMA - Grp 5_Report [Final].pdf
     ├───Test Case Showcase     
     │   ├── Test Case Guide // Document detailing HMS test cases, with detailed input and output
     │   └── Test Case Video.txt
@@ -144,3 +150,12 @@ Follow these steps to set up the Hospital Management System on your local machin
    - 4.1 Kindly refer to the "Test Case Showcase" folder for video and test case guide on the full breakdown of the required test cases
    - 4.2 <a href="https://entuedu-my.sharepoint.com/:v:/g/personal/jchoon001_e_ntu_edu_sg/EQL8dz0N641Ei1W9d871tMABkQRx7WoDq4U-9rU-E9Qkrw?nav=eyJyZWZlcnJhbEluZm8iOnsicmVmZXJyYWxBcHAiOiJPbmVEcml2ZUZvckJ1c2luZXNzIiwicmVmZXJyYWxBcHBQbGF0Zm9ybSI6IldlYiIsInJlZmVycmFsTW9kZSI6InZpZXciLCJyZWZlcnJhbFZpZXciOiJNeUZpbGVzTGlua0NvcHkifX0&e=ig8S6K
 ">Link to Test Case Video</a>
+
+## 5. UML Diagrams
+Kindly refer to the hyperlinks below to view the respective UML Diagrams
+   - 5.1 <a href="https://github.com/JonahChoon/SC2002-OOP-Assignment/blob/a427d48d8e88558bb41948278c06b1ea976eb06a/UML%20Class%20%26%20Sequence%20Diagram/HMS%20Class%20Diagram.jpg">UML Class Diagram</a>
+   - 5.2 <a href="https://github.com/JonahChoon/SC2002-OOP-Assignment/blob/a427d48d8e88558bb41948278c06b1ea976eb06a/UML%20Class%20%26%20Sequence%20Diagram/HMS%20Sequence%20Diagram.png">UML Sequence Diagram</a>
+   - 5.2.1 <a href="https://github.com/JonahChoon/SC2002-OOP-Assignment/blob/a427d48d8e88558bb41948278c06b1ea976eb06a/UML%20Class%20%26%20Sequence%20Diagram/Roles%20Sequence%20Sub%20Diagram/PatientSubDiagram.png">UML Sequence Patient Sub Diagram</a>
+   - 5.2.2 <a href="https://github.com/JonahChoon/SC2002-OOP-Assignment/blob/a427d48d8e88558bb41948278c06b1ea976eb06a/UML%20Class%20%26%20Sequence%20Diagram/Roles%20Sequence%20Sub%20Diagram/DoctorSubDiagram.png">UML Sequence Doctor Sub Diagram</a>
+   - 5.2.3 <a href="https://github.com/JonahChoon/SC2002-OOP-Assignment/blob/a427d48d8e88558bb41948278c06b1ea976eb06a/UML%20Class%20%26%20Sequence%20Diagram/Roles%20Sequence%20Sub%20Diagram/PharmacistSubDiagram.png">UML Sequence Pharmacist Sub Diagram</a>
+   - 5.2.4 <a href="https://github.com/JonahChoon/SC2002-OOP-Assignment/blob/a427d48d8e88558bb41948278c06b1ea976eb06a/UML%20Class%20%26%20Sequence%20Diagram/Roles%20Sequence%20Sub%20Diagram/AdministratorSubDiagram.png">UML Sequence Administrator Sub Diagram</a>
